@@ -1,0 +1,72 @@
+*gobugger.txt*  Opinionated Go debugger for Neovim        *gobugger*
+
+An opinionated Go debugger for Neovim: launch.json-driven, worktree-aware,
+delve-integrated, pre-wired with nvim-dap-view. See the README at
+https://github.com/yongjohnlee80/gobugger.nvim for the full reference.
+
+==============================================================================
+SETUP                                                        *gobugger-setup*
+
+Call |gobugger.setup()| once from your config, typically in a lazy.nvim spec: >
+    require("gobugger").setup({})
+    require("gobugger").default_keymaps()
+<
+
+==============================================================================
+COMMANDS                                                  *gobugger-commands*
+
+                                                                    *:Gobugger*
+:Gobugger {subcommand} [args]
+    Dispatch to a gobugger action. Available subcommands:
+
+        test         Debug the test under the cursor.
+        run          Debug a main program. Picks a mode=debug config.
+        run-last     Re-run the most recent debug session.
+        new main     Scaffold a new mode=debug launch.json entry.
+        new test     Scaffold a new mode=test launch.json entry.
+        reload       Clear launch.json cache + all session picks.
+        pick [mode]  Clear session pick for a mode (default "test").
+        doctor       Dump a diagnostic report.
+        fix          Run `git worktree repair` from the bare.
+
+==============================================================================
+API                                                            *gobugger-api*
+
+                                                            *gobugger.setup()*
+require("gobugger").setup({opts})
+    Merge {opts} over defaults, then wire sign glyphs, nvim-dap-view, and
+    the winfixbuf guard.
+
+                                                        *gobugger.run_test()*
+                                                       *gobugger.run_debug()*
+                                                        *gobugger.run_last()*
+                                                        *gobugger.new_test()*
+                                                       *gobugger.new_debug()*
+                                                          *gobugger.reload()*
+                                                      *gobugger.clear_pick()*
+                                                          *gobugger.doctor()*
+                                                    *gobugger.fix_worktree()*
+                                                  *gobugger.default_keymaps()*
+
+    See the README for full signatures.
+
+==============================================================================
+CONFIGURATION                                              *gobugger-config*
+
+Full options list documented in the README. Common ones:
+
+    launch_paths            Relative paths searched for launch.json.
+    config_name             Hard pin — skip picker, always use this name.
+    lsp_servers_to_restart  LSPs to restart on cwd switch (for integrations).
+    bare_dir                `.bare` (default) or `.git` for bare-repo conv.
+    ui                      "dap-view" | false | <table of dap-view opts>
+    sign_glyphs             Override DapBreakpoint etc. sign definitions.
+    languages               Per-filetype scaffolder + adapter mappings.
+
+==============================================================================
+TROUBLESHOOTING                                       *gobugger-troubleshoot*
+
+Run `:Gobugger doctor` for a state dump. Common issues are covered in the
+README's Troubleshooting section.
+
+ vim:tw=78:ts=8:ft=help:norl:
