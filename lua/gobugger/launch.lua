@@ -267,15 +267,14 @@ local function ensure_parsed(override_path)
 end
 
 -- Resolution cascade: config_name → session_pick → single-match → prompt.
--- Calls back with nil if no match or the user cancels.
+-- On success, calls back with (cfg, nil). On failure, (nil, reason) where
+-- reason is "no_matches" (no configs for this mode) or "cancelled" (the
+-- user dismissed the picker). Callers use the reason to decide whether
+-- to fall through to an adapter default or bail silently.
 local function resolve(mode, callback)
   local matches = filter_configs(cache and cache.parsed or {}, mode)
   if #matches == 0 then
-    notify(
-      ("no mode=%s configs in %s"):format(mode, cache and cache.path or "<none>"),
-      vim.log.levels.WARN
-    )
-    callback(nil)
+    callback(nil, "no_matches")
     return
   end
 
@@ -296,7 +295,7 @@ local function resolve(mode, callback)
     prompt = ("Pick a %s config:"):format(mode),
     format_item = function(c) return c.name end,
   }, function(choice)
-    if not choice then callback(nil); return end
+    if not choice then callback(nil, "cancelled"); return end
     session_pick[mode] = choice.name
     notify(("picked '%s' (cached for this session; :Gobugger pick to reset)")
       :format(choice.name))
@@ -304,14 +303,21 @@ local function resolve(mode, callback)
   end)
 end
 
---- Async load. `callback` fires with a dap-ready config table, or an empty
---- table if nothing matched / the user cancelled.
+--- Async load. Callback fires with `(cfg, reason)`:
+---   * `(cfg, nil)`        -- success: cfg is dap-ready
+---   * `(nil, "no_launch_json")` -- no launch.json found via upward walk
+---   * `(nil, "no_matches")`     -- launch.json exists but no configs for mode
+---   * `(nil, "cancelled")`      -- user dismissed the picker
+---   * `(nil, "parse_error")`    -- launch.json failed to parse (notify fired)
 ---@param override_path string?
----@param callback fun(config: table)
+---@param callback fun(config: table?, reason: string?)
 ---@param mode string?  "test" (default) or "debug"
 function M.load(override_path, callback, mode)
-  if not ensure_parsed(override_path) then callback({}); return end
-  resolve(mode or "test", function(cfg) callback(cfg or {}) end)
+  if not ensure_parsed(override_path) then
+    callback(nil, "no_launch_json")
+    return
+  end
+  resolve(mode or "test", callback)
 end
 
 --- Drop the file cache + all session picks and re-read from disk. Intended
