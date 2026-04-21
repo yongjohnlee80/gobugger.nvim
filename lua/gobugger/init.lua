@@ -57,54 +57,53 @@ function M.default_keymaps()
   local dap_ok, dap = pcall(require, "dap")
   local dv_ok, dv = pcall(require, "dap-view")
   local dg_ok, dg = pcall(require, "dap-go")
-  local set = vim.keymap.set
+
+  -- Lazy bootstrap order isn't guaranteed to fully init every dap module
+  -- before our config() runs -- some deps can land as bare requires with
+  -- methods not yet attached. Skip any binding whose target is nil
+  -- instead of crashing the whole default_keymaps pass.
+  local function bind(mode, lhs, rhs, desc)
+    if type(rhs) ~= "function" and type(rhs) ~= "string" then return end
+    vim.keymap.set(mode, lhs, rhs, { desc = desc })
+  end
 
   if dap_ok then
-    set("n", "<F9>",        dap.continue,           { desc = "Debug: Continue / Start" })
-    set("n", "<F8>",        dap.step_over,          { desc = "Debug: Step Over" })
-    set("n", "<F7>",        dap.step_into,          { desc = "Debug: Step Into" })
-    set("n", "<F10>",       dap.step_out,           { desc = "Debug: Step Out" })
-    set("n", "<leader>db",  dap.toggle_breakpoint,  { desc = "Debug: Toggle Breakpoint" })
-    set("n", "<leader>dB",  function()
+    bind("n", "<F9>",       dap.continue,          "Debug: Continue / Start")
+    bind("n", "<F8>",       dap.step_over,         "Debug: Step Over")
+    bind("n", "<F7>",       dap.step_into,         "Debug: Step Into")
+    bind("n", "<F10>",      dap.step_out,          "Debug: Step Out")
+    bind("n", "<leader>db", dap.toggle_breakpoint, "Debug: Toggle Breakpoint")
+    bind("n", "<leader>dB", dap.set_breakpoint and function()
       dap.set_breakpoint(vim.fn.input("Breakpoint condition: "))
-    end, { desc = "Debug: Conditional Breakpoint" })
-    set("n", "<leader>dC",  dap.clear_breakpoints,  { desc = "Debug: Clear Breakpoints" })
-    set("n", "<leader>dc",  dap.continue,           { desc = "Debug: Continue / Start" })
-    set("n", "<leader>dr",  dap.run_last,           { desc = "Debug: Run Last" })
-    set("n", "<leader>dq",  dap.terminate,          { desc = "Debug: Terminate" })
-    set("n", "<leader>dR",  dap.restart,            { desc = "Debug: Restart" })
+    end, "Debug: Conditional Breakpoint")
+    bind("n", "<leader>dC", dap.clear_breakpoints, "Debug: Clear Breakpoints")
+    bind("n", "<leader>dc", dap.continue,          "Debug: Continue / Start")
+    bind("n", "<leader>dr", dap.run_last,          "Debug: Run Last")
+    bind("n", "<leader>dq", dap.terminate,         "Debug: Terminate")
+    bind("n", "<leader>dR", dap.restart,           "Debug: Restart")
   end
 
   if dv_ok then
-    set("n",         "<leader>dv", dv.toggle,    { desc = "Debug: Toggle View" })
-    set({ "n", "v" }, "<leader>dw", dv.add_expr, { desc = "Debug: Watch Expr (add)" })
-    set({ "n", "v" }, "<leader>de", dv.eval,     { desc = "Debug: Evaluate" })
+    bind("n",         "<leader>dv", dv.toggle,   "Debug: Toggle View")
+    bind({ "n", "v" }, "<leader>dw", dv.add_expr, "Debug: Watch Expr (add)")
+    bind({ "n", "v" }, "<leader>de", dv.eval,     "Debug: Evaluate")
   end
 
   if dg_ok then
-    set("n", "<leader>da", dg.attach,
-      { desc = "Debug: Attach to Process (delve)" })
+    bind("n", "<leader>da", dg.attach, "Debug: Attach to Process (delve)")
   end
 
   -- launch.json-driven flows. These don't need their target plugin to
   -- exist at keymap-registration time -- the call sites pcall-require on
   -- invocation, so the maps are safe to bind eagerly.
-  set("n", "<leader>dt", function() M.run_test() end,
-    { desc = "Debug: Test (+launch.json)" })
-  set("n", "<leader>dm", function() M.run_debug() end,
-    { desc = "Debug: Main (+launch.json)" })
-  set("n", "<leader>dM", function() M.new_debug() end,
-    { desc = "Debug: New Main entry (+launch.json)" })
-  set("n", "<leader>dN", function() M.new_test() end,
-    { desc = "Debug: New Test entry (+launch.json)" })
-  set("n", "<leader>dT", function() M.run_last() end,
-    { desc = "Debug: Run Last" })
-  set("n", "<leader>dL", function() M.reload() end,
-    { desc = "Debug: Reload launch.json + clear picks" })
-  set("n", "<leader>dD", function() M.doctor() end,
-    { desc = "Debug: Doctor" })
-  set("n", "<leader>dF", function() M.fix_worktree() end,
-    { desc = "Debug: Fix worktree (git worktree repair)" })
+  bind("n", "<leader>dt", function() M.run_test() end,    "Debug: Test (+launch.json)")
+  bind("n", "<leader>dm", function() M.run_debug() end,   "Debug: Main (+launch.json)")
+  bind("n", "<leader>dM", function() M.new_debug() end,   "Debug: New Main entry (+launch.json)")
+  bind("n", "<leader>dN", function() M.new_test() end,    "Debug: New Test entry (+launch.json)")
+  bind("n", "<leader>dT", function() M.run_last() end,    "Debug: Run Last")
+  bind("n", "<leader>dL", function() M.reload() end,      "Debug: Reload launch.json + clear picks")
+  bind("n", "<leader>dD", function() M.doctor() end,      "Debug: Doctor")
+  bind("n", "<leader>dF", function() M.fix_worktree() end, "Debug: Fix worktree (git worktree repair)")
 end
 
 return M
