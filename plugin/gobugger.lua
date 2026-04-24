@@ -23,13 +23,14 @@ local SUBCOMMANDS = {
   fix       = function(_)       require("gobugger").fix_worktree() end,
   reload    = function(_)       require("gobugger").reload() end,
   pick      = function(args)    require("gobugger").clear_pick(args[1]) end,
+  ["last-error"] = function(_)  require("gobugger").last_error() end,
 }
 
 vim.api.nvim_create_user_command("Gobugger", function(cmd)
   local tokens = vim.split(cmd.args, "%s+", { trimempty = true })
   if #tokens == 0 then
     vim.notify(
-      "[gobugger] :Gobugger { run | test | run-last | new | doctor | fix | reload | pick }",
+      "[gobugger] :Gobugger { run | test | run-last | new | doctor | fix | reload | pick | last-error }",
       vim.log.levels.ERROR
     )
     return
@@ -57,12 +58,12 @@ end, {
     if on_first then
       return filter({
         "run", "test", "run-last", "new",
-        "doctor", "fix", "reload", "pick",
+        "doctor", "fix", "reload", "pick", "last-error",
       })
     end
     if tokens[2] == "new" then return filter({ "main", "test" }) end
     if tokens[2] == "pick" then return filter({ "test", "debug" }) end
     return {}
   end,
-  desc = "gobugger: run | test | run-last | new | doctor | fix | reload | pick",
+  desc = "gobugger: run | test | run-last | new | doctor | fix | reload | pick | last-error",
 })
