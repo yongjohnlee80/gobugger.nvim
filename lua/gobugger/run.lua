@@ -11,10 +11,16 @@ local config = require("gobugger.config")
 
 local M = {}
 
+-- ADR 0021 §6 wrapper: route through `gobugger.log` (component
+-- `run`) so every run-related toast lands in the auto-core ring.
 local function notify(msg, level)
-  local opts = {}
-  if config.options.notify_title then opts.title = config.options.notify_title end
-  vim.notify(msg, level or vim.log.levels.INFO, opts)
+  local log = require("gobugger.log")
+  level = level or vim.log.levels.INFO
+  if level == vim.log.levels.ERROR then return log.error("run", msg)
+  elseif level == vim.log.levels.WARN then return log.warn("run", msg)
+  elseif level == vim.log.levels.DEBUG then return log.debug("run", msg)
+  elseif level == vim.log.levels.TRACE then return log.trace("run", msg)
+  else return log.info("run", msg) end
 end
 
 -- Open nvim-dap-view before a session starts. The before.launch /

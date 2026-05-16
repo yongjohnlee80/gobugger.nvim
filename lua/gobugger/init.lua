@@ -84,7 +84,7 @@ function M.attach_remote(port)
     local input = vim.fn.input("dlv server port: ", "2345")
     port = tonumber(input)
     if not port then
-      vim.notify("gobugger.attach_remote: invalid port", vim.log.levels.WARN)
+      require("gobugger.log").warn("attach_remote", "invalid port")
       return
     end
   end
@@ -169,11 +169,9 @@ function M.default_keymaps()
           return
         end
       end
-      vim.notify(
-        "[gobugger] no 'Attach' config found in dap.configurations.go — " ..
-        "is dap-go.setup() running?",
-        vim.log.levels.WARN
-      )
+      require("gobugger.log").warn("attach",
+        "no 'Attach' config found in dap.configurations.go — " ..
+        "is dap-go.setup() running?")
     end, "Debug: Attach to Process (delve)")
   end
 

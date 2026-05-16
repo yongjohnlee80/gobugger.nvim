@@ -51,10 +51,8 @@ local function setup_dap_view()
   local dap_ok, dap = pcall(require, "dap")
   local dv_ok, dv = pcall(require, "dap-view")
   if not (dap_ok and dv_ok) then
-    vim.notify(
-      "[gobugger] ui is enabled but nvim-dap and/or nvim-dap-view aren't installed",
-      vim.log.levels.WARN
-    )
+    require("gobugger.log").warn("ui",
+      "ui is enabled but nvim-dap and/or nvim-dap-view aren't installed")
     return
   end
 

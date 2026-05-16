@@ -48,10 +48,8 @@ local function flush_if_failed(reason_prefix)
   end
 
   vim.schedule(function()
-    vim.notify(
-      ("[gobugger] %s\n\n%s%s"):format(reason_prefix, preview, trailer),
-      vim.log.levels.ERROR
-    )
+    require("gobugger.log").error("errors",
+      ("%s\n\n%s%s"):format(reason_prefix, preview, trailer))
   end)
 end
 
@@ -110,7 +108,7 @@ end
 function M.open_last()
   local txt = M.last()
   if not txt or txt == "" then
-    vim.notify("[gobugger] no captured error output yet", vim.log.levels.INFO)
+    require("gobugger.log").info("errors", "no captured error output yet")
     return
   end
 
